@@ -1,56 +1,93 @@
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import NewsItem from "./NewsItem";
+import InfiniteScroll from "react-infinite-scroll-component";
 import Spinner from "./Spinner";
 
-export class News extends Component {
-  static defaultProps = {
-    country: "in",
-    category: "",
-    pagesize: 6,
-  };
-  constructor() {
-    super();
-    this.state = {
-      articles: [],
-      loading: false,
-      page: 1,
-    };
-  }
-  async update() {
-    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=dbe57b028aeb41e285a226a94865f7a7&page=${this.state.page}&pageSize=${this.props.pagesize}`;
-    this.setState({ loading: true });
+const News = (props) => {
+  const [articles, setArticles] = useState([]);
+  const [loading, setloading] = useState(false);
+  const [page, setpage] = useState(1);
+  const [totalResults, settotalResults] = useState(0);
+  const fetchMoreData = async () => {
+    let url = `https://newsapi.org/v2/top-headlines?country=${
+      props.country
+    }&category=${props.category}&apiKey=${props.apikey}&page=${page +
+      1}&pageSize=${props.pagesize}`;
+    setpage(page + 1); //error occurs as page is not updated in url so as setpage is asynchronous function and it takes time to update page but url is updated before that
+
     let data = await fetch(url);
     let jsondata = await data.json();
-
-    this.setState({ articles: jsondata.articles, loading: false });
-  }
-
-  async componentDidMount() {
-    this.update();
-  }
-
-  handleprev = async () => {
-    this.setState({ page: this.state.page - 1 });
-    this.update();
+    setArticles(articles.concat(jsondata.articles));
+    settotalResults(jsondata.totalResults);
   };
-  handlenext = async () => {
-    this.setState({ page: this.state.page + 1 });
-    this.update();
+  const update = async () => {
+    props.setprogress(10);
+    let url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apikey}&page=${page}&pageSize=${props.pagesize}`;
+    props.setprogress(30);
+    setloading(true);
+    let data = await fetch(url);
+    let jsondata = await data.json();
+    props.setprogress(70);
+    setArticles(jsondata.articles);
+    setloading(false);
+    props.setprogress(100);
   };
-  render() {
-    return (
-      <div className="container my-3 ">
-        <h1 className="text-center" style={{ padding: "50px" }}>
-          Headlines
-        </h1>
-        {this.state.loading && <Spinner />}
+  useEffect(() => {
+    update();
+  }, []);
 
-        {this.state.loading ? (
+  // handleprev = () => {
+  //   useState({ page: page - 1 });
+  //   update();
+  // };
+  // handlenext = () => {
+  //   useState({ page: page + 1 });
+
+  //   update();
+  // };
+
+  return (
+    <>
+      <h1
+        className="text-center"
+        style={{ padding: "50px", marginTop: "90px" }}
+      >
+        Headlines
+      </h1>
+      {loading && <Spinner />}
+
+      {/* {loading ? (
           console.log("loading")
-        ) : (
-          <div className="container">
+        ) : ( */}
+      <InfiniteScroll
+        dataLength={articles.length}
+        next={fetchMoreData}
+        hasMore={articles.length !== totalResults}
+        loader={<Spinner />}
+      >
+        <div className="container my-3">
+          <div className="row">
+            {articles.map((element) => {
+              return (
+                <div className="col-md-4 my-4" key={element.url}>
+                  <NewsItem
+                    title={element.title}
+                    description={element.description}
+                    imgurl={element.urlToImage}
+                    url={element.url}
+                    author={element.author}
+                    date={element.publishedAt}
+                    source={element.source.name}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </InfiniteScroll>
+      {/* <div className="container">
             <div className="row">
-              {this.state.articles.map((element) => {
+               {articles.map((element) => {
                 return (
                   <div className="col-md-4 my-4" key={element.url}>
                     <NewsItem
@@ -75,30 +112,34 @@ export class News extends Component {
               }}
             >
               <button
-                disabled={this.state.page <= 1}
+                disabled={page <= 1}
                 type="button"
                 className="btn btn-dark"
-                onClick={this.handleprev}
+                onClick={handleprev}
               >
                 &larr; Previous
               </button>
               <button
                 disabled={
-                  this.state.page + 1 >
-                  Math.ceil(this.state.totalres / this.props.pagesize)
+                  page + 1 >
+                  Math.ceil(totalres / props.pagesize)
                 }
                 type="button"
                 className="btn btn-dark"
-                onClick={this.handlenext}
+                onClick={handlenext}
               >
                 Next &rarr;
               </button>
             </div>
           </div>
-        )}
-      </div>
-    );
-  }
-}
+               } */}
+    </>
+  );
+};
 
+News.defaultProps = {
+  country: "in",
+  category: "",
+  pagesize: 6,
+};
 export default News;

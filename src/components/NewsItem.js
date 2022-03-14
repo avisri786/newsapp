@@ -1,8 +1,8 @@
-import React, { Component } from "react";
+import React from "react";
 
-export class NewsItem extends Component {
-  render() {
-    let { title, description, imgurl, url, author, date,source } = this.props;
+const NewsItem=(props)=> {
+  
+    let { title, description, imgurl, url, author, date,source } = props;
     return (
       <div>
         <div className="card-deck">
@@ -24,16 +24,17 @@ export class NewsItem extends Component {
               <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Read More
               </a>
-              <span className="position-absolute top-0 translate-middle badge rounded-pill bg-danger" style={{left:'85%', zIndex:'1'}}>
+              <div style={{position:'absolute',top:'0',right:'0',display:'flex'}}>
+              <span className="  badge rounded-pill bg-danger">
                 {source}
                 <span className="visually-hidden">unread messages</span>
-              </span>
+              </span></div>
             </div>
           </div>
         </div>
       </div>
     );
   }
-}
+
 
 export default NewsItem;
